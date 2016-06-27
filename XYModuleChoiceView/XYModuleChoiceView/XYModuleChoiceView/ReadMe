@@ -1,0 +1,4 @@
+
+1：
+- (void)moduleChoice:(XYModuleChoiceView * _Nonnull)mchoiceView didDisappearViewController:(UIViewController * _Nonnull)viewController;
+实现上面代理方法，可以在viewController释放的时候做处理

@@ -28,6 +28,8 @@
 		8E63E8221D1F84F800444C87 /* XYModuleChoiceViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E63E8211D1F84F800444C87 /* XYModuleChoiceViewManager.m */; };
 		8E63E8251D1F8D7200444C87 /* ModuleViewControllerManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E63E8241D1F8D7200444C87 /* ModuleViewControllerManager.m */; };
 		8E63E8281D1F8EF400444C87 /* TableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E63E8271D1F8EF400444C87 /* TableViewController.m */; };
+		8EBAD9B41D5983A100A1FFDD /* UIScrollView+XYFloatFooter.m in Sources */ = {isa = PBXBuildFile; fileRef = 8EBAD9B11D5983A100A1FFDD /* UIScrollView+XYFloatFooter.m */; };
+		8EBAD9B51D5983A100A1FFDD /* XYSubModuleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8EBAD9B31D5983A100A1FFDD /* XYSubModuleViewController.m */; };
 		8EC16F591D21700B00632366 /* ReadMe in Resources */ = {isa = PBXBuildFile; fileRef = 8EC16F581D21700B00632366 /* ReadMe */; };
 /* End PBXBuildFile section */
 
@@ -76,6 +78,11 @@
 		8E63E8241D1F8D7200444C87 /* ModuleViewControllerManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ModuleViewControllerManager.m; sourceTree = "<group>"; };
 		8E63E8261D1F8EF400444C87 /* TableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TableViewController.h; sourceTree = "<group>"; };
 		8E63E8271D1F8EF400444C87 /* TableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TableViewController.m; sourceTree = "<group>"; };
+		8EBAD9B01D5983A100A1FFDD /* UIScrollView+XYFloatFooter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIScrollView+XYFloatFooter.h"; sourceTree = "<group>"; };
+		8EBAD9B11D5983A100A1FFDD /* UIScrollView+XYFloatFooter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIScrollView+XYFloatFooter.m"; sourceTree = "<group>"; };
+		8EBAD9B21D5983A100A1FFDD /* XYSubModuleViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XYSubModuleViewController.h; sourceTree = "<group>"; };
+		8EBAD9B31D5983A100A1FFDD /* XYSubModuleViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XYSubModuleViewController.m; sourceTree = "<group>"; };
+		8EBAD9B61D5984AA00A1FFDD /* XYMacroDefinition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XYMacroDefinition.h; sourceTree = "<group>"; };
 		8EC16F581D21700B00632366 /* ReadMe */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ReadMe; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -139,10 +146,15 @@
 			isa = PBXGroup;
 			children = (
 				8E63E7EB1D1F57EE00444C87 /* Resource.bundle */,
+				8EBAD9B01D5983A100A1FFDD /* UIScrollView+XYFloatFooter.h */,
+				8EBAD9B11D5983A100A1FFDD /* UIScrollView+XYFloatFooter.m */,
+				8EBAD9B21D5983A100A1FFDD /* XYSubModuleViewController.h */,
+				8EBAD9B31D5983A100A1FFDD /* XYSubModuleViewController.m */,
 				8E63E7ED1D1F580700444C87 /* XYModuleChoiceView.h */,
 				8E63E7EE1D1F580700444C87 /* XYModuleChoiceView.m */,
 				8E63E8201D1F84F800444C87 /* XYModuleChoiceViewManager.h */,
 				8E63E8211D1F84F800444C87 /* XYModuleChoiceViewManager.m */,
+				8EBAD9B61D5984AA00A1FFDD /* XYMacroDefinition.h */,
 				8EC16F581D21700B00632366 /* ReadMe */,
 			);
 			path = XYModuleChoiceView;
@@ -263,9 +275,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				8E63E80F1D1F584A00444C87 /* MASConstraintMaker.m in Sources */,
+				8EBAD9B51D5983A100A1FFDD /* XYSubModuleViewController.m in Sources */,
 				8E63E7EF1D1F580700444C87 /* XYModuleChoiceView.m in Sources */,
 				8E63E7DB1D1F571B00444C87 /* ViewController.m in Sources */,
 				8E63E80E1D1F584A00444C87 /* MASConstraint.m in Sources */,
+				8EBAD9B41D5983A100A1FFDD /* UIScrollView+XYFloatFooter.m in Sources */,
 				8E63E8161D1F584A00444C87 /* ViewController+MASAdditions.m in Sources */,
 				8E63E8101D1F584A00444C87 /* MASLayoutConstraint.m in Sources */,
 				8E63E8131D1F584A00444C87 /* NSArray+MASAdditions.m in Sources */,

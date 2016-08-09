@@ -64,6 +64,10 @@ typedef enum {
 @property(nullable,nonatomic,strong,readwrite) UIColor *unChoosedFontColor; //未选中字体颜色
 //-- headerScrollView最多显示模块数,默认为5
 @property(assign,nonatomic,readwrite) NSUInteger maxButtonsInShowHeader;
+//-- 使用页脚导航,Default is NO, 默认高度40
+@property(assign,nonatomic,readwrite) CGFloat heightOfFooter;
+@property(assign,nonatomic,readwrite) BOOL useFooterNavigation;
+@property(strong,nonatomic,readonly,nullable) UIView *footerView;
 
 //刷新数据
 - (void)reloadData;
@@ -71,6 +75,8 @@ typedef enum {
 - (void)blackShadowHeader;
 //获取当前选中的ViewController
 - (nullable UIViewController *)selectedViewController;
+//不会超过2个未选择的控制器
+- (nullable NSArray *)unSelectedViewControllers;
 
 @end
 

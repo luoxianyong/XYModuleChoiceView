@@ -12,5 +12,6 @@
 @interface XYModuleChoiceViewManager : UIViewController<XYModuleChoiceViewDataSource>
 
 @property (nonatomic,strong,nonnull,readonly) XYModuleChoiceView *moduleChoiceView;
+@property (nonatomic,strong,nullable,readonly) NSMutableArray *mArrayModules;
 
 @end

@@ -9,20 +9,27 @@
 #import "XYModuleChoiceViewManager.h"
 #import "Masonry.h"
 
-@interface XYModuleChoiceViewManager ()
+@interface XYModuleChoiceViewManager () {
+    NSMutableArray *_mArrayModules;
+}
 
 @end
 
 @implementation XYModuleChoiceViewManager
 
+@synthesize mArrayModules = _mArrayModules;
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     
     _moduleChoiceView = [[XYModuleChoiceView alloc] init];
+    self.moduleChoiceView.rootView.backgroundColor = [UIColor whiteColor];
+    [self.moduleChoiceView setSliderStyle:XYMCV_FontColorShade];
     [self.moduleChoiceView blackShadowHeader];
     [self.view addSubview:self.moduleChoiceView];
     [self.moduleChoiceView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.edges.equalTo(self.view);
+        make.size.equalTo(self.view);
     }];
 }
 - (void)viewWillAppear:(BOOL)animated {
@@ -46,7 +53,15 @@
 - (UIView *)sliderView {
     return [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Resource.bundle/MC_Slider.png"]];
 }
-
-
+- (CGFloat)heightOfHeaderView {
+    return 44;
+}
+#pragma mark - getter
+- (NSMutableArray *)mArrayModules {
+    if(!_mArrayModules) {
+        _mArrayModules = [[NSMutableArray alloc] init];
+    }
+    return _mArrayModules;
+}
 
 @end

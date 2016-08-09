@@ -10,7 +10,6 @@
 #import "TableViewController.h"
 
 @interface ModuleViewControllerManager ()
-@property (nonatomic,strong,nonnull) NSMutableArray *mArrayModules;
 @end
 
 @implementation ModuleViewControllerManager
@@ -23,7 +22,8 @@
     [super viewDidLoad];
     
     [self.moduleChoiceView setSliderStyle:self.type];
-    [self setMArrayModules:[NSMutableArray array]];
+    if(self.type == XYMCV_FontColorShade)
+        [self.moduleChoiceView setUseFooterNavigation:YES];
     [self.mArrayModules addObject:@"军事"];
     [self.mArrayModules addObject:@"财经"];
     [self.mArrayModules addObject:@"生活"];
@@ -55,7 +55,7 @@
 }
 
 - (NSUInteger)numberOfModules {
-    return _mArrayModules.count;
+    return self.mArrayModules.count;
 }
 - (nonnull UIButton *)moduleChoice:(XYModuleChoiceView * _Nonnull)moduleChoiceView headerViewAtIndex:(NSUInteger)index {
     NSString *title = self.mArrayModules[index];

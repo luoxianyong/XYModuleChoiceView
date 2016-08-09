@@ -10,9 +10,9 @@
 #import "Masonry.h"
 
 #define XYUIColorFromRGB(rgbValue) [UIColor colorWithRed:((float)((rgbValue & 0xFF0000) >> 16))/255.0 green:((float)((rgbValue & 0xFF00) >> 8))/255.0 blue:((float)(rgbValue & 0xFF))/255.0 alpha:1.0]
-#define XYMonitorFrame @"w_headerView"
+static NSString * XYMonitorFrame = @"w_headerView";
 
-@interface XYModuleChoiceView ()<UIScrollViewDelegate> {
+@interface XYModuleChoiceView ()<UIScrollViewDelegate,UIGestureRecognizerDelegate> {
     CGFloat MCRootView_MinX;
     CGFloat MCRootView_MinY;
     CGFloat MCRootView_MaxX;
@@ -28,11 +28,14 @@
     NSUInteger oldSelectIndex;
     NSUInteger selectedIndex; //从0开始
     NSInteger choosedFontSize;//当sliderStyle为XYMCV_FontColorShade有效
+    NSInteger headAndbottomViewStartTag; //Tag不能从0开始，这里给一个初始值800
 }
 //-- 底部View缓存
-@property (nonatomic,strong,nullable) NSMutableArray *mArrayCacheViewsInBottom;
-@property (nonatomic,assign) NSUInteger cacheViewsCount;
-@property (nonatomic,assign) CGFloat w_headerView;
+@property(nonatomic,strong,nullable) NSMutableArray *mArrayCacheViewsInBottom;
+@property(nonatomic,assign) NSUInteger cacheViewsCount;
+@property(nonatomic,assign) CGFloat w_headerView;
+@property(strong,nonatomic,readwrite,nullable) UIView *footerView;
+@property(strong,nonatomic,readwrite) UIPanGestureRecognizer *panGestureRecognizer;
 @end
 
 @implementation XYModuleChoiceView
@@ -48,7 +51,7 @@
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context {
     if([keyPath isEqualToString:XYMonitorFrame]) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [self switchSliderView:CGRectGetMinX([[self contentViewInHeader] viewWithTag:selectedIndex].frame)];
+            [self switchSliderView:CGRectGetMinX([[self contentViewInHeader] viewWithTag:selectedIndex+headAndbottomViewStartTag].frame)];
         });
     }
 }
@@ -58,7 +61,9 @@
 - (instancetype)init {
     if(self = [super init]) {
         contentTag = 3333;
+        headAndbottomViewStartTag = 800;
         choosedFontSize = XYMCVTextFontSize+3;
+        _heightOfFooter = 40;
         self.useAnimation = YES;
         self.maxButtonsInShowHeader = 5;
         self.choosedFontColor = XYUIColorFromRGB(0xde0103);
@@ -98,21 +103,75 @@
     [self.rootView addSubview:_headerScrollView];
     
     __weak typeof(self) weakSelf = self;
+    
+    
     [self.rootView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.edges.equalTo(weakSelf);
     }];
     [self.headerScrollView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.mas_equalTo(0);
         make.left.mas_equalTo(0);
-        make.right.equalTo(weakSelf.mas_right);
+        make.right.equalTo(weakSelf.rootView.mas_right);
         make.height.mas_equalTo(40);//Default is 40
     }];
     [self.bottomScrollView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(weakSelf.headerScrollView.mas_bottom);
         make.left.mas_equalTo(0);
-        make.right.equalTo(weakSelf.mas_right);
-        make.bottom.equalTo(weakSelf.mas_bottom);
+        make.right.equalTo(weakSelf.rootView);
+        make.bottom.equalTo(weakSelf.rootView);
     }];
+}
+- (void)setUseFooterNavigation:(BOOL)useFooterNavigation {
+    if(_useFooterNavigation != useFooterNavigation) {
+        _useFooterNavigation = useFooterNavigation;
+        [self layout];
+    }
+}
+- (void)setHeightOfFooter:(CGFloat)heightOfFooter {
+    if(_heightOfFooter != heightOfFooter) {
+        _heightOfFooter = heightOfFooter;
+        [self layout];
+    }
+}
+- (void)layout {
+    __weak typeof(self) weakSelf = self;
+    if(!_useFooterNavigation) {
+        [self.bottomScrollView mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.bottom.equalTo(weakSelf.rootView.mas_bottom);
+        }];
+        [_footerView removeFromSuperview];
+        [self setFooterView:nil];
+    } else {
+        [self.rootView addSubview:self.footerView];
+        [self.bottomScrollView mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.bottom.equalTo(weakSelf.rootView.mas_bottom).with.offset(-weakSelf.heightOfFooter);
+        }];
+        [self.footerView mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.height.mas_equalTo(weakSelf.heightOfFooter);
+            make.left.mas_equalTo(0);
+            make.right.equalTo(weakSelf.rootView.mas_right);
+            make.bottom.equalTo(weakSelf.rootView.mas_bottom);
+        }];
+    }
+}
+- (UIView *)footerView {
+    if(!_footerView) {
+        _footerView = [[UIView alloc] init];
+        _footerView.userInteractionEnabled = YES;
+        _footerView.backgroundColor = [UIColor grayColor];
+    }
+    return _footerView;
+}
+- (UIPanGestureRecognizer *)panGestureRecognizer {
+    if(!_panGestureRecognizer) {
+        UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(activateOfFooter:)];
+        pan.delegate = self;
+        self.panGestureRecognizer = pan;
+    }
+    return _panGestureRecognizer;
+}
+- (void)activateOfFooter:(UIPanGestureRecognizer *)pan {
+    
 }
 #pragma mark - 获取ScrollView中的内容View
 - (UIView *)contentViewInHeader {
@@ -164,7 +223,11 @@
         make.top.equalTo(weakSelf.headerScrollView.mas_bottom).with.offset(MCSpacingOfBetweenTwoScorllViews);
         make.left.mas_equalTo(0);//-- 方便计算contentOffset 好好思考
         make.right.equalTo(weakSelf.rootView.mas_right).with.offset(MCWidthOfBottomViews);//-- 好好思考
-        make.bottom.equalTo(weakSelf.rootView.mas_bottom);
+        if(weakSelf.useFooterNavigation) {
+            make.bottom.equalTo(weakSelf.footerView.mas_top);
+        } else {
+            make.bottom.equalTo(weakSelf.rootView);
+        }
     }];
     
     self.w_headerView = CGRectGetWidth(self.headerScrollView.frame);
@@ -226,7 +289,7 @@
                 make.width.mas_equalTo(headerModule_w);
             }];
         }
-        [button setTag:i];//-- 设置Tag值
+        [button setTag:i+headAndbottomViewStartTag];//-- 设置Tag值
         [button addTarget:self action:@selector(touchDown:) forControlEvents:UIControlEventTouchDown];
         lastButton = button;
     }
@@ -300,7 +363,7 @@
     [self.bottomScrollView mas_remakeConstraints:^(MASConstraintMaker *make) {}];
 }
 - (void)bottomScrollToSelectedIndex:(NSInteger)selectedIndex_ {
-    UIView *view = [[self contentViewInBottom] viewWithTag:selectedIndex_];
+    UIView *view = [[self contentViewInBottom] viewWithTag:selectedIndex_+headAndbottomViewStartTag];
     NSInteger index = [[[self contentViewInBottom] subviews] indexOfObject:view];
     [self.bottomScrollView setContentOffset:CGPointMake(index*([self scrollBottomViewWidth]+MCWidthOfBottomViews), 0)];
 }
@@ -326,8 +389,19 @@
 }
 #pragma mark - 获取当前选中的ViewController
 - (nullable UIViewController *)selectedViewController {
-    UIView *view = [[self contentViewInBottom] viewWithTag:selectedIndex];
+    UIView *view = [[self contentViewInBottom] viewWithTag:selectedIndex+headAndbottomViewStartTag];
     return [self firstViewController:view];
+}
+- (nullable NSArray *)unSelectedViewControllers {
+    NSMutableArray *mArray = [[NSMutableArray alloc] initWithCapacity:2];
+    UIView *currentView = [[self contentViewInBottom] viewWithTag:selectedIndex];
+    for(UIView *view in [[self contentViewInBottom] subviews]) {
+        if(currentView != view) {
+            UIViewController *vc = [self firstViewController:view];
+            vc ? [mArray addObject:vc] : 0;
+        }
+    }
+    return mArray;
 }
 
 #pragma mark - 加载BottomViews
@@ -347,7 +421,7 @@
         first = selectedIndex-1;
     }
     for(int i=0; i<MIN(self.cacheViewsCount, MCModulesCount); i++) {
-        [self.mArrayCacheViewsInBottom addObject:[NSNumber numberWithInteger:i+first]];
+        [self.mArrayCacheViewsInBottom addObject:[NSNumber numberWithInteger:i+first+headAndbottomViewStartTag]];
     }
     
     __weak typeof(self) weakself = self;
@@ -377,7 +451,7 @@
     UIView *lastView = nil;
     CGFloat bottomModule_w = [self scrollBottomViewWidth];
     for(NSUInteger i=first; i<MIN(self.cacheViewsCount, MCModulesCount)+first; i++) {
-        UIView *hasView = [bottomContentView viewWithTag:i];
+        UIView *hasView = [bottomContentView viewWithTag:i+headAndbottomViewStartTag];
         if(hasView) {
             subViewController = [self firstViewController:hasView];
         } else {
@@ -385,7 +459,7 @@
             [viewController addChildViewController:subViewController];
             [bottomContentView insertSubview:subViewController.view atIndex:i-first];
         }
-        subViewController.view.tag = i;//设置Tag
+        subViewController.view.tag = i+headAndbottomViewStartTag;//设置Tag
         [subViewController.view mas_remakeConstraints:^(MASConstraintMaker *make) {
         }];
         
@@ -403,22 +477,22 @@
         make.right.equalTo(lastView.mas_right).with.offset(MCWidthOfBottomViews);
     }];
     [self bottomScrollToSelectedIndex:selectedIndex];
-    [self switchSliderView:CGRectGetMinX([[self contentViewInHeader] viewWithTag:selectedIndex].frame)];
+    [self switchSliderView:CGRectGetMinX([[self contentViewInHeader] viewWithTag:selectedIndex+headAndbottomViewStartTag].frame)];
     [self switchBeforeViewIndex:oldSelectIndex afterViewIndex:selectedIndex];
 }
 
 #pragma mark - 手势处理
 - (void)touchDown:(UIButton *)sender {
-    if(sender.tag != selectedIndex) {
+    if(sender.tag-headAndbottomViewStartTag != selectedIndex) {
         [self switchSliderView:CGRectGetMinX(sender.frame)]; //看手势添加在哪个对象上的
         oldSelectIndex = selectedIndex;
-        selectedIndex  = sender.tag;
+        selectedIndex  = sender.tag-headAndbottomViewStartTag;
         [self removeAndAddViewsToBottom];
     }
 }
 
 - (void)switchSliderView:(CGFloat)slider_x {
-    UIButton *button = [[self contentViewInHeader] viewWithTag:selectedIndex];
+    UIButton *button = [[self contentViewInHeader] viewWithTag:selectedIndex+headAndbottomViewStartTag];
     CGFloat button_midx = CGRectGetMidX(button.frame);
     CGFloat offset_x = button_midx-CGRectGetWidth(self.headerScrollView.frame)/2.0;
     if(offset_x < 0) {
@@ -460,7 +534,7 @@
         NSInteger offset_x = sView.contentOffset.x;
         NSInteger s_w = sView.frame.size.width;
         CGFloat remainder = offset_x%s_w;
-        UIView * currentView = [[self contentViewInBottom] viewWithTag:selectedIndex];
+        UIView * currentView = [[self contentViewInBottom] viewWithTag:selectedIndex+headAndbottomViewStartTag];
         if(remainder == 0) {
             
         } else {
@@ -469,8 +543,8 @@
             
             if(self.sliderStyle == XYMCV_FontColorShade) {
                 NSInteger changeValue = fabs(scrollPercentage)/0.33;
-                UIButton *willShowButton = [[self contentViewInHeader] viewWithTag:selectedIndex+(scrollPercentage>0?1:-1)];
-                UIButton *currentButton = [[self contentViewInHeader] viewWithTag:selectedIndex];
+                UIButton *willShowButton = [[self contentViewInHeader] viewWithTag:selectedIndex+headAndbottomViewStartTag+(scrollPercentage>0?1:-1)];
+                UIButton *currentButton = [[self contentViewInHeader] viewWithTag:selectedIndex+headAndbottomViewStartTag];
                 [willShowButton.titleLabel setFont:[UIFont fontWithName:XYMCVTextFontName size:XYMCVTextFontSize+changeValue]];
                 [currentButton.titleLabel setFont:[UIFont fontWithName:XYMCVTextFontName size:XYMCVTextFontSize-changeValue]];
             }
@@ -492,7 +566,7 @@
         CGFloat offset_x = scrollView.contentOffset.x;//取得当前显示内容的坐标x
         NSInteger page = floor(offset_x/s_w);//当前在第几页,从0开始
         UIView *currentView = [[[self contentViewInBottom] subviews] objectAtIndex:page];
-        if(selectedIndex == currentView.tag) {
+        if(selectedIndex == currentView.tag-headAndbottomViewStartTag) {
             if(self.sliderStyle == XYMCV_FontColor) {
                 [self settingFontColorAtButton];
             } else if(self.sliderStyle == XYMCV_FontColorShade) {
@@ -502,7 +576,7 @@
             return;
         }
         oldSelectIndex = selectedIndex;
-        selectedIndex = currentView.tag;
+        selectedIndex = currentView.tag-headAndbottomViewStartTag;
         if(oldSelectIndex != selectedIndex) {
             [self removeAndAddViewsToBottom];
         }

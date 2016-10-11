@@ -24,15 +24,15 @@ static NSString * XYMonitorFrame = @"w_headerView";
     CGFloat MCWidthOfBottomViews;//-- bottomScrollView中subViews之间的间距，Defautl is 10
     NSInteger MCModulesCount;//-- 有多少个模块
     
-    NSUInteger contentTag;
-    NSUInteger oldSelectIndex;
-    NSUInteger selectedIndex; //从0开始
+    NSInteger contentTag;
+    NSInteger oldSelectIndex;
+    NSInteger selectedIndex; //从0开始
     NSInteger choosedFontSize;//当sliderStyle为XYMCV_FontColorShade有效
     NSInteger headAndbottomViewStartTag; //Tag不能从0开始，这里给一个初始值800
 }
 //-- 底部View缓存
 @property(nonatomic,strong,nullable) NSMutableArray *mArrayCacheViewsInBottom;
-@property(nonatomic,assign) NSUInteger cacheViewsCount;
+@property(nonatomic,assign) NSInteger cacheViewsCount;
 @property(nonatomic,assign) CGFloat w_headerView;
 @property(strong,nonatomic,readwrite,nullable) UIView *footerView;
 @property(strong,nonatomic,readwrite) UIPanGestureRecognizer *panGestureRecognizer;
@@ -41,6 +41,12 @@ static NSString * XYMonitorFrame = @"w_headerView";
 @implementation XYModuleChoiceView
 @synthesize selectedIndex = selectedIndex;
 
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    
+    [self reloadData];
+}
+
 - (void)setDataSource:(id<XYModuleChoiceViewDataSource>)dataSource {
     if(_dataSource != dataSource) {
         _dataSource = dataSource;
@@ -48,13 +54,15 @@ static NSString * XYMonitorFrame = @"w_headerView";
     }
 }
 #pragma mark - 初始化
+//实时更新switchSliderView的frame
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context {
     if([keyPath isEqualToString:XYMonitorFrame]) {
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.35 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             [self switchSliderView:CGRectGetMinX([[self contentViewInHeader] viewWithTag:selectedIndex+headAndbottomViewStartTag].frame)];
         });
     }
 }
+
 - (void)dealloc {
     [self removeObserver:self forKeyPath:XYMonitorFrame];
 }
@@ -62,7 +70,7 @@ static NSString * XYMonitorFrame = @"w_headerView";
     if(self = [super init]) {
         contentTag = 3333;
         headAndbottomViewStartTag = 800;
-        choosedFontSize = XYMCVTextFontSize+3;
+        choosedFontSize = XYMCVTextFontSize+2;
         _heightOfFooter = 40;
         self.useAnimation = YES;
         self.maxButtonsInShowHeader = 5;
@@ -182,12 +190,16 @@ static NSString * XYMonitorFrame = @"w_headerView";
 }
 
 #pragma mark - 选择模块
-- (void)setSelectedIndex:(NSUInteger)selectedIndex___ {
+- (void)setSelectedIndex:(NSInteger)selectedIndex___ {
     if(selectedIndex != selectedIndex___) {
         selectedIndex = selectedIndex___;
         UIButton *selectedButton = (UIButton *)[[self contentViewInHeader].subviews objectAtIndex:selectedIndex];//请看reloadData是如何工作的
         [self touchDown:selectedButton];
     }
+}
+- (void)setCloseScrollPageturning:(BOOL)closeScrollPageturning {
+    _closeScrollPageturning = closeScrollPageturning;
+    self.bottomScrollView.scrollEnabled = !closeScrollPageturning;
 }
 
 #pragma mark - UI布局
@@ -242,7 +254,7 @@ static NSString * XYMonitorFrame = @"w_headerView";
     }
     [self adjustFrameForSubviews];
     //能显示多少个模块
-    NSUInteger showModules = MCModulesCount>self.maxButtonsInShowHeader ? self.maxButtonsInShowHeader : MCModulesCount;
+    NSInteger showModules = MCModulesCount>self.maxButtonsInShowHeader ? self.maxButtonsInShowHeader : MCModulesCount;
     
     //每一个分块的宽度
     CGFloat headerModule_w = ([self scrollHeaderViewWidth]-MCWidthOfSeparator*(showModules-1))/showModules;
@@ -265,7 +277,7 @@ static NSString * XYMonitorFrame = @"w_headerView";
     viewController.automaticallyAdjustsScrollViewInsets = NO;
     viewController.edgesForExtendedLayout = UIRectEdgeNone;
     
-    for(NSUInteger i=0; i<MCModulesCount; i++) {
+    for(NSInteger i=0; i<MCModulesCount; i++) {
         //-- headerView
         button = (UIButton *)[_dataSource moduleChoice:self headerViewAtIndex:i];
         [button.titleLabel setFont:[UIFont fontWithName:XYMCVTextFontName size:XYMCVTextFontSize]];
@@ -340,6 +352,20 @@ static NSString * XYMonitorFrame = @"w_headerView";
             [currButton.titleLabel setFont:[UIFont fontWithName:XYMCVTextFontBlodName size:choosedFontSize]];
             break;
         }
+        case XYMCV_FontColorShadeAndUnderline: {
+            UIButton * currButton = [[self contentViewInHeader].subviews objectAtIndex:selectedIndex];
+            [currButton setTitleColor:self.choosedFontColor forState:UIControlStateNormal];
+            [currButton.titleLabel setFont:[UIFont fontWithName:XYMCVTextFontBlodName size:choosedFontSize]];
+            _ivSlider = [_dataSource sliderView];
+            [self.headerScrollView addSubview:_ivSlider];
+            [self.ivSlider mas_remakeConstraints:^(MASConstraintMaker *make) {
+                make.left.mas_equalTo(selectedIndex*(headerModule_w+MCWidthOfSeparator));
+                make.width.mas_equalTo(headerModule_w);
+                make.height.mas_equalTo(MCIvSliderHeight);
+                make.bottom.equalTo(weakself.headerScrollView.mas_bottom);
+            }];
+            break;
+        }
         default:
             break;
     }
@@ -381,11 +407,18 @@ static NSString * XYMonitorFrame = @"w_headerView";
 }
 
 #pragma mark - 设置头部阴影
-- (void)blackShadowHeader {
+- (void)setUseBlackShadowHeader:(BOOL)useBlackShadowHeader {
+    _useBlackShadowHeader = useBlackShadowHeader;
     self.headerScrollView.backgroundColor = [UIColor whiteColor];
-    self.headerScrollView.layer.shadowColor  = [UIColor blackColor].CGColor;
-    self.headerScrollView.layer.shadowOffset = CGSizeMake(0, -1);
-    self.headerScrollView.layer.shadowOpacity= 0.2;
+    if (useBlackShadowHeader) {
+        self.headerScrollView.layer.shadowColor  = [UIColor blackColor].CGColor;
+        self.headerScrollView.layer.shadowOffset = CGSizeMake(0.5, 0.5);
+        self.headerScrollView.layer.shadowOpacity= 0.07;
+    } else {
+        self.headerScrollView.layer.shadowColor  = [UIColor clearColor].CGColor;
+        self.headerScrollView.layer.shadowOffset = CGSizeMake(0, 0);
+        self.headerScrollView.layer.shadowOpacity= 0;
+    }
 }
 #pragma mark - 获取当前选中的ViewController
 - (nullable UIViewController *)selectedViewController {
@@ -407,19 +440,27 @@ static NSString * XYMonitorFrame = @"w_headerView";
 #pragma mark - 加载BottomViews
 - (void)removeAndAddViewsToBottom {
     [self.mArrayCacheViewsInBottom removeAllObjects];
-    NSUInteger first = -1, count = 1;
-    if(selectedIndex == MCModulesCount-1) { //最后一个
-        NSInteger last = MCModulesCount;
-        while (last > 0 && count <= self.cacheViewsCount) {
-            last--;
-            count++;
-        }
-        first = last;
-    } else if(selectedIndex == 0) { //第一个
+    NSInteger first = -1, count = 1;
+    
+    if (self.noReleaseAnyController) {
         first = 0;
+        self.cacheViewsCount = 100;
     } else {
-        first = selectedIndex-1;
+        self.cacheViewsCount = 3;
+        if(selectedIndex == MCModulesCount-1) { //最后一个
+            NSInteger last = MCModulesCount;
+            while (last > 0 && count <= self.cacheViewsCount) {
+                last--;
+                count++;
+            }
+            first = last;
+        } else if(selectedIndex == 0) { //第一个
+            first = 0;
+        } else {
+            first = selectedIndex-1;
+        }
     }
+    
     for(int i=0; i<MIN(self.cacheViewsCount, MCModulesCount); i++) {
         [self.mArrayCacheViewsInBottom addObject:[NSNumber numberWithInteger:i+first+headAndbottomViewStartTag]];
     }
@@ -450,12 +491,15 @@ static NSString * XYMonitorFrame = @"w_headerView";
     UIViewController *subViewController = nil;
     UIView *lastView = nil;
     CGFloat bottomModule_w = [self scrollBottomViewWidth];
-    for(NSUInteger i=first; i<MIN(self.cacheViewsCount, MCModulesCount)+first; i++) {
+    for(NSInteger i=first; i<MIN(self.cacheViewsCount, MCModulesCount)+first; i++) {
         UIView *hasView = [bottomContentView viewWithTag:i+headAndbottomViewStartTag];
         if(hasView) {
             subViewController = [self firstViewController:hasView];
         } else {
             subViewController = [_dataSource moduleChoice:self bottomViewAtIndex:i];
+            subViewController.view.layer.shadowColor  = [UIColor blackColor].CGColor;
+            subViewController.view.layer.shadowOffset = CGSizeMake(2.5, 2.5);
+            subViewController.view.layer.shadowOpacity= 0.9;
             [viewController addChildViewController:subViewController];
             [bottomContentView insertSubview:subViewController.view atIndex:i-first];
         }
@@ -509,7 +553,7 @@ static NSString * XYMonitorFrame = @"w_headerView";
 - (void)switchBeforeViewIndex:(NSInteger)beforeIndex afterViewIndex:(NSInteger)afterIndex {
     if(self.sliderStyle == XYMCV_FontColor) {
         [self settingFontColorAtButton];
-    } else if(self.sliderStyle == XYMCV_FontColorShade) {
+    } else if(self.sliderStyle == XYMCV_FontColorShade || self.sliderStyle == XYMCV_FontColorShadeAndUnderline) {
         [self settingFontColorAtButton];
         UIButton *oldButton = [[[self contentViewInHeader] subviews] objectAtIndex:oldSelectIndex];
         UIButton *xinButton = [[[self contentViewInHeader] subviews] objectAtIndex:selectedIndex];
@@ -541,7 +585,7 @@ static NSString * XYMonitorFrame = @"w_headerView";
             CGFloat scrollPercentage = remainder/s_w; //单页滚动比例
             scrollPercentage = offset_x > [[self contentViewInBottom].subviews indexOfObject:currentView]*s_w ? scrollPercentage : scrollPercentage-1;
             
-            if(self.sliderStyle == XYMCV_FontColorShade) {
+            if(self.sliderStyle == XYMCV_FontColorShade || self.sliderStyle == XYMCV_FontColorShadeAndUnderline) {
                 NSInteger changeValue = fabs(scrollPercentage)/0.33;
                 UIButton *willShowButton = [[self contentViewInHeader] viewWithTag:selectedIndex+headAndbottomViewStartTag+(scrollPercentage>0?1:-1)];
                 UIButton *currentButton = [[self contentViewInHeader] viewWithTag:selectedIndex+headAndbottomViewStartTag];
@@ -569,7 +613,7 @@ static NSString * XYMonitorFrame = @"w_headerView";
         if(selectedIndex == currentView.tag-headAndbottomViewStartTag) {
             if(self.sliderStyle == XYMCV_FontColor) {
                 [self settingFontColorAtButton];
-            } else if(self.sliderStyle == XYMCV_FontColorShade) {
+            } else if(self.sliderStyle == XYMCV_FontColorShade || self.sliderStyle == XYMCV_FontColorShadeAndUnderline) {
                 [self settingFontColorAtButton];
                 [self settingFontSizeAtButton];
             }

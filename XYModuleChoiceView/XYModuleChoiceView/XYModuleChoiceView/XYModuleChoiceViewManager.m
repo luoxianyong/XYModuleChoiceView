@@ -25,7 +25,7 @@
     _moduleChoiceView = [[XYModuleChoiceView alloc] init];
     self.moduleChoiceView.rootView.backgroundColor = [UIColor whiteColor];
     [self.moduleChoiceView setSliderStyle:XYMCV_FontColorShade];
-    [self.moduleChoiceView blackShadowHeader];
+    [self.moduleChoiceView setUseBlackShadowHeader:YES];
     [self.view addSubview:self.moduleChoiceView];
     [self.moduleChoiceView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.edges.equalTo(self.view);

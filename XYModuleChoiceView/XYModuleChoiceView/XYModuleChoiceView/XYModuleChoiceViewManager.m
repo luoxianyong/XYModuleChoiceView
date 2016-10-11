@@ -41,13 +41,13 @@
 }
 
 #pragma mark - XYModuleChoiceViewDataSource
-- (NSUInteger)numberOfModules {
+- (NSInteger)numberOfModules {
     return 0;
 }
-- (nonnull UIButton *)moduleChoice:(XYModuleChoiceView * _Nonnull)moduleChoiceView headerViewAtIndex:(NSUInteger)index; {
+- (nonnull UIButton *)moduleChoice:(XYModuleChoiceView * _Nonnull)moduleChoiceView headerViewAtIndex:(NSInteger)index; {
     return nil;
 }
-- (nonnull UIViewController *)moduleChoice:(XYModuleChoiceView * _Nonnull)moduleChoiceView bottomViewAtIndex:(NSUInteger)index {
+- (nonnull UIViewController *)moduleChoice:(XYModuleChoiceView * _Nonnull)moduleChoiceView bottomViewAtIndex:(NSInteger)index {
     return nil;
 }
 - (UIView *)sliderView {

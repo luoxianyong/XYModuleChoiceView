@@ -54,20 +54,20 @@
     [self.mArrayModules addObject:@"京东"];
 }
 
-- (NSUInteger)numberOfModules {
+- (NSInteger)numberOfModules {
     return self.mArrayModules.count;
 }
-- (nonnull UIButton *)moduleChoice:(XYModuleChoiceView * _Nonnull)moduleChoiceView headerViewAtIndex:(NSUInteger)index {
+- (nonnull UIButton *)moduleChoice:(XYModuleChoiceView * _Nonnull)moduleChoiceView headerViewAtIndex:(NSInteger)index {
     NSString *title = self.mArrayModules[index];
     UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
     [button setTitle:title forState:UIControlStateNormal];
     return button;
 }
-- (nonnull UIViewController *)moduleChoice:(XYModuleChoiceView * _Nonnull)moduleChoiceView bottomViewAtIndex:(NSUInteger)index {
+- (nonnull UIViewController *)moduleChoice:(XYModuleChoiceView * _Nonnull)moduleChoiceView bottomViewAtIndex:(NSInteger)index {
     NSLog(@"加载：%@",self.mArrayModules[index]);
     return [[TableViewController alloc] initWithTitle:self.mArrayModules[index]];
 }
-- (void)moduleChoice:(XYModuleChoiceView *)mchoiceView didSelectRow:(NSUInteger)index {
+- (void)moduleChoice:(XYModuleChoiceView *)mchoiceView didSelectRow:(NSInteger)index {
     TableViewController *viewController = (TableViewController *)[mchoiceView selectedViewController];
     NSLog(@"选中：%@",viewController.titleName);
 }
